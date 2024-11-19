@@ -2,6 +2,7 @@
 
 namespace App\Filters;
 
+// use App\Libraries\CustomRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Filters\FilterInterface;
@@ -12,6 +13,11 @@ class AuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
+
+        // if (!$request instanceof CustomRequest) {
+        //     throw new \RuntimeException('Request debe ser una instancia de CustomRequest');
+        // }
+
         $authHeader = $request->getHeaderLine('Authorization');
         if (!$authHeader) {
             return service('response')->setJSON(['message' => 'Token no proporcionado'])->setStatusCode(401);
