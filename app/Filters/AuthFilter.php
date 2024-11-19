@@ -20,7 +20,10 @@ class AuthFilter implements FilterInterface
 
         $authHeader = $request->getHeaderLine('Authorization');
         if (!$authHeader) {
-            return service('response')->setJSON(['message' => 'Token no proporcionado'])->setStatusCode(401);
+            return service('response')->setJSON([
+                'error'   => true,
+                'message' => 'No tienes autorización para acceder a este recurso'
+            ])->setStatusCode(401);
         }
 
         // extract token from header
