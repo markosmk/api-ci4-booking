@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\IncomingRequest;
 class CustomRequest extends IncomingRequest
 {
     /**
-     * Almacena los datos del usuario autenticado
+     * save data user in request
      * @var array|null
      */
     public $user;

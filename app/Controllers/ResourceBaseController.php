@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Libraries\CustomRequest;
+use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -9,9 +11,13 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Extends ResourceController to add common functionality to all RESTful controllers
+ * 
+ * @property CLIRequest|CustomRequest $request
  */
 abstract class ResourceBaseController extends ResourceController
 {
+    protected $request;
+
     protected $helpers = [];
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
