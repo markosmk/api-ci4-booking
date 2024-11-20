@@ -11,22 +11,37 @@ class AuthController extends ResourceBaseController
 {
     public function login()
     {
-        $model = new UserModel();
+        //TODO: Auditory Logs, register intent of fail login, to detect attacks
+        //TODO: Rate Limiting, prevent brute force attacks (also in public POSTs)
         $data = $this->request->getJSON(true);
 
-        if (!$model->validateData($data, 'login')) {
-            return $this->failValidationErrors($this->model->getErrors());
+        $model = new UserModel();
+        if (!$model->validateLogin($data)) {
+            return $this->failValidationErrors($model->getErrors());
         }
 
+        // get username or email
+        $field = !empty($data['username']) ? 'username' : 'email';
+        $value = $data[$field];
+
         // search user, if exists
-        $user = $model->where('username', $data['username'])->first();
+        $user = $model->where($field, $value)->first();
 
         if (!$user || !password_verify($data['password'], $user['password'])) {
-            return $this->failValidationErrors(['message' => 'Nombre de usuario o contraseña incorrectos']);
+            return $this->failValidationErrors(['login' => 'Nombre de usuario o contraseña incorrectos']);
         }
 
         $token = $this->generateJWT($user);
-        return $this->respond(['message' => 'Login exitoso', 'token' => $token]);
+        return $this->respond([
+                'message' => 'Login exitoso',
+                'token' => $token,
+                'user'    => [
+                    // 'id'       => $user['id'],
+                    'username' => $user['username'],
+                    'email'    => $user['email'],
+                    'role'     => $user['role'],
+                ],
+        ]);
     }
 
     public function me()
@@ -43,14 +58,22 @@ class AuthController extends ResourceBaseController
         }
     }
 
-    protected function generateJWT($user)
+    protected function generateJWT(array $user): string
     {
         $key = getenv('JWT_SECRET');
         $payload = [
-            'id' => $user['id'],
-            'role' => $user['role'],
+            // 'id' => $user['id'],
+            // 'role' => $user['role'],
+            // 'iss' => 'http://domain.com', // Emisor del token
+            // 'aud' => 'http://domain.com', // Audiencia del token
             'iat' => time(),
             'exp' => time() + 3600, // 1 hour
+            'data' => [
+                'id'       => $user['id'],
+                'username' => $user['username'],
+                'email'    => $user['email'],
+                'role'     => $user['role'],
+            ],
         ];
         return JWT::encode($payload, $key, 'HS256');
     }
