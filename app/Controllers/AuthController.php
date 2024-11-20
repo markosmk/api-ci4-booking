@@ -62,17 +62,17 @@ class AuthController extends ResourceBaseController
     {
         $key = getenv('JWT_SECRET');
         $payload = [
-            // 'id' => $user['id'],
-            // 'role' => $user['role'],
+            'id' => $user['id'],
+            'role' => $user['role'],
             // 'iss' => 'http://domain.com', // Emisor del token
             // 'aud' => 'http://domain.com', // Audiencia del token
             'iat' => time(),
             'exp' => time() + 3600, // 1 hour
             'data' => [
-                'id'       => $user['id'],
+                // 'id'       => $user['id'],
                 'username' => $user['username'],
                 'email'    => $user['email'],
-                'role'     => $user['role'],
+                // 'role'     => $user['role'],
             ],
         ];
         return JWT::encode($payload, $key, 'HS256');
