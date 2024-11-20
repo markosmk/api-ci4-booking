@@ -13,12 +13,12 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->get('me', 'AuthController::me', ['filter' => 'auth']);
 
     // Users (only superadmin)
-    $routes->post('users', 'UserController::create', ['filter' => 'auth']);
-    $routes->get('users', 'UserController::index', ['filter' => 'auth']);
-    $routes->put('users/(:num)', 'UserController::update/$1', ['filter' => 'auth']);
-    $routes->delete('users/(:num)', 'UserController::delete/$1', ['filter' => 'auth']);
+    $routes->get('users', 'UserController::index', ['filter' => ['auth','superadmin']]);
+    $routes->post('users', 'UserController::create', ['filter' => ['auth','superadmin']]);
+    $routes->put('users/(:num)', 'UserController::update/$1', ['filter' => ['auth','superadmin']]);
+    $routes->delete('users/(:num)', 'UserController::delete/$1', ['filter' => ['auth','superadmin']]);
 
-    // user admin: only update his pass and username
+    // user: only update his pass and username
     $routes->put('users/self', 'UserController::updateSelf', ['filter' => 'auth']);
 
     // Reservations
