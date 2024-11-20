@@ -13,7 +13,7 @@ class UserController extends ResourceBaseController
 
     public function index()
     {
-        $users = $this->model->findAll();
+        $users = $this->model->orderBy('users.created_at', 'desc')->findAll();
 
         // not show password in list users
         foreach ($users as $key => $user) {

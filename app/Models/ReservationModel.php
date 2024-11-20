@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+
 // use Config\Validation\Validator as Validation;
 
 class ReservationModel extends Model
@@ -53,7 +54,7 @@ class ReservationModel extends Model
         'status' => [
             'in_list' => 'El estado debe ser uno de los siguientes: pending, completed, canceled.',
         ],
-        'notes' => [            
+        'notes' => [
             'max_length' => 'Las notas no pueden superar los 500 caracteres.',
         ],
     ];
@@ -97,8 +98,8 @@ class ReservationModel extends Model
         $validation->setRules($this->validationRules, $this->validationMessages);
 
         if (!$validation->run($data)) {
-            $this->errors = $validation->getErrors(); 
-            return false; 
+            $this->errors = $validation->getErrors();
+            return false;
         }
 
         return true;
@@ -107,13 +108,14 @@ class ReservationModel extends Model
     /**
      * Get all reservations with their corresponding reservation type.
      * ex: $model->getReservationsWithType()
-     * 
+     *
      * @return array
      */
     public function getReservationsWithType()
     {
         return $this->select('reservations.*, reservation_types.name as reservation_type_name, reservation_types.description as reservation_type_description')
         ->join('reservation_types', 'reservations.reservation_type = reservation_types.id', 'left')
+        ->orderBy('reservations.created_at', 'desc')
         ->findAll();
     }
 
@@ -125,6 +127,7 @@ class ReservationModel extends Model
         $query = $db->table($this->table)
             ->select('reservations.*, reservation_types.id as type_id, reservation_types.name as type_name, reservation_types.description as type_description')
             ->join('reservation_types', 'reservation_types.id = reservations.reservation_type', 'left')
+            ->orderBy('reservations.created_at', 'desc')
             ->get();
 
         $results = $query->getResultArray();
@@ -153,7 +156,7 @@ class ReservationModel extends Model
     /**
      * Filter reservations by status
      * ex: $model->filterByStatus('pending')
-     * 
+     *
      * @param string $status
      * @return array
      */
