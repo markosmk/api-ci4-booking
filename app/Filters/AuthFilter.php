@@ -35,11 +35,10 @@ class AuthFilter implements FilterInterface
 
             // save data user in request for future use
             $request->user = (array) $decoded;
-
         } catch (\Exception $e) {
             return service('response')->setJSON([
-                'message' => 'Token inválido o expirado', 
-                'error' => $e->getMessage()
+                'error' => true,
+                'message' => $e->getMessage()
             ])->setStatusCode(401);
         }
     }
