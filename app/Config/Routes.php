@@ -5,9 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
-
-$routes->group('api', ['namespace' => 'App\Controllers'], function ($routes) {
+$routes->group('api/v1', ['namespace' => 'App\Controllers'], function ($routes) {
     // Auth
     $routes->post('login', 'AuthController::login');
     $routes->get('me', 'AuthController::me', ['filter' => 'auth']);
