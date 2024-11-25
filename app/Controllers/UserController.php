@@ -184,4 +184,29 @@ class UserController extends ResourceBaseController
 
         return $this->failServerError('No se pudo eliminar el usuario');
     }
+
+    public function me()
+    {
+        $authUser = $this->request->user;
+
+        if (!$authUser) {
+            return $this->failUnauthorized('No tienes autorización para acceder a este recurso');
+        }
+
+        $user = $this->model->find($authUser['id']);
+        if (!$user) {
+            return $this->failNotFound('Usuario no encontrado');
+        }
+
+        return $this->respond([
+            'message' => 'Datos del usuario',
+            'user'    => [
+                'id'       => $user['id'],
+                'name'     => $user['name'],
+                'username' => $user['username'],
+                'email'    => $user['email'],
+                'role'     => $user['role'],
+            ],
+        ]);
+    }
 }
