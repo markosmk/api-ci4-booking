@@ -21,9 +21,8 @@ class AnalyticsController extends ResourceBaseController
         $db = \Config\Database::connect();
 
         $totalIncome = $db->table('bookings')
-            ->select('SUM(tours.price * bookings.quantity) AS total_income')
-            ->join('tours', 'tours.id = bookings.tourId')
-            ->where('bookings.status', 'CONFIRMED')
+            ->selectSum('totalPrice', 'total_income')
+            ->where('status', 'CONFIRMED')
             ->get()
             ->getRow()
             ->total_income;
@@ -47,32 +46,11 @@ class AnalyticsController extends ResourceBaseController
             ->where('active', '1')
             ->countAllResults();
 
-        // last `10` pending bookings
-        // $recentPendingBookings = $db->table('bookings')
-        //     ->select('
-        //         bookings.id AS booking_id,
-        //         bookings.quantity,
-        //         bookings.status,
-        //         bookings.created_at AS booking_created_at,
-        //         customers.name AS customer_name,
-        //         tours.name AS tour_name
-        //         ')
-        //     ->join('customers', 'customers.id = bookings.customerId')
-        //     ->join('tours', 'tours.id = bookings.tourId')
-        //     ->where('bookings.status', 'PENDING')
-        //     ->orderBy('bookings.created_at', 'DESC')
-        //     ->limit(10)
-        //     ->get()
-        //     ->getResultArray();
-
         // monthly income by months
         $monthlyIncome = $db->table('bookings')
-            ->select('
-                MONTH(bookings.created_at) AS month, 
-                SUM(tours.price * bookings.quantity) AS income
-                ')
-            ->join('tours', 'tours.id = bookings.tourId')
-            ->where('bookings.status', 'CONFIRMED')
+
+            ->select("MONTH(created_at) as month, SUM(totalPrice) as income")
+            ->where('status', 'CONFIRMED')
             ->groupBy('month')
             ->orderBy('month', 'ASC')
             ->get()
@@ -84,7 +62,6 @@ class AnalyticsController extends ResourceBaseController
             'total_bookings_confirmed' => $totalBookingsConfirmed ?? 0,
             'total_bookings_not_pending' => $totalBookingsNotPending ?? 0,
             'total_active_tours' => $totalActiveTours ?? 0,
-            // 'recent_pending_bookings' => $recentPendingBookings,
             'monthly_income' => $this->formatMonthlyIncome($monthlyIncome),
         ];
 
