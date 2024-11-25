@@ -5,10 +5,23 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->group('api/v1', ['namespace' => 'App\Controllers'], function ($routes) {
+$routes->group('api/v1', ['namespace' => 'App\Controllers', 'filter' => 'cors'], function (RouteCollection $routes) {
+
+
+    $routes->options('(:any)', static function () {
+        // Implement processing for normal non-preflight OPTIONS requests,
+        // if necessary.
+        $response = response();
+        $response->setStatusCode(204);
+        $response->setHeader('Allow:', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
+
+        return $response;
+    });
+
     // Auth
     $routes->post('login', 'AuthController::login');
-    $routes->get('me', 'AuthController::me', ['filter' => 'auth']);
+    $routes->post('logout', 'AuthController::logout');
+    $routes->get('me', 'UserController::me', ['filter' => 'auth']);
 
     // Users (only superadmin)
     $routes->get('users', 'UserController::index', ['filter' => ['auth','superadmin']]);
@@ -30,4 +43,28 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers'], function ($routes) 
     $routes->post('reservation-types', 'ReservationTypeController::create', ['filter' => 'auth']);
     $routes->put('reservation-types/(:num)', 'ReservationTypeController::update/$1', ['filter' => 'auth']);
     $routes->delete('reservation-types/(:num)', 'ReservationTypeController::delete/$1', ['filter' => 'auth']);
+
+    // $routes->resource('tours');
+
+    $routes->get('tours', 'TourController::index');
+    $routes->get('tours/(:num)', 'TourController::show/$1');
+    $routes->post('tours', 'TourController::create');
+    // Para crear horarios y reservar, puedes usar rutas adicionales o incluirlas en el recurso
+    $routes->post('schedules/(:segment)', 'ScheduleController::createSchedule/$1');
+    $routes->get('schedules/(:segment)', 'ScheduleController::getSchedulesByMonth/$1');
+    $routes->get('schedules/(:segment)/month/(:num)/year/(:num)', 'ScheduleController::getSchedulesByMonth/$1/$2/$3');
+    $routes->get('schedules/(:segment)/date/(:any)', 'ScheduleController::getSchedulesByDate/$1/$2');
+
+    $routes->get('bookings', 'BookingController::index');
+    $routes->post('bookings', 'BookingController::bookTour');
+
+
+    $routes->get('customers', 'CustomerController::index');
+    $routes->get('customers/(:num)', 'CustomerController::show/$1');
+
+    // Analytics
+    $routes->get('dashboard/stats', 'AnalyticsController::index');
+    $routes->get('dashboard/recent-bookings', 'AnalyticsController::recentsBookings');
+    $routes->get('dashboard/clear-cache', 'AnalyticsController::clearCache');
+
 });
