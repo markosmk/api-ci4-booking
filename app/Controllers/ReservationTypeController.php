@@ -2,10 +2,11 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
+// use CodeIgniter\RESTful\ResourceController;
 use App\Models\ReservationTypeModel;
+use App\Controllers\ResourceBaseController;
 
-class ReservationTypeController extends ResourceController
+class ReservationTypeController extends ResourceBaseController
 {
     protected $modelName = ReservationTypeModel::class;
     protected $format    = 'json';

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ReservationModel;
 use CodeIgniter\Database\Exceptions\DatabaseException;
+use App\Controllers\ResourceBaseController;
 
 class ReservationController extends ResourceBaseController
 {

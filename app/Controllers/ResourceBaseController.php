@@ -11,14 +11,14 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Extends ResourceController to add common functionality to all RESTful controllers
- * 
+ *
  * @property CLIRequest|CustomRequest $request
  */
 abstract class ResourceBaseController extends ResourceController
 {
     protected $request;
 
-    protected $helpers = [];
+    protected $helpers = ['cookie'];
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
@@ -32,7 +32,7 @@ abstract class ResourceBaseController extends ResourceController
     /**
      * Method to respond with a server error
      */
-    protected function respondWithServerError($message = 'Ha ocurrido un error en el servidor', )
+    protected function respondWithServerError($message = 'Ha ocurrido un error en el servidor')
     {
         return $this->response->setStatusCode(500)->setJSON([
             'error'   => true,
