@@ -53,3 +53,14 @@ Events::on('pre_system', static function (): void {
         }
     }
 });
+
+
+// Invalida el caché al confirmar, cancelar, o crear un booking
+Events::on('bookingUpdated', function () {
+    cache()->delete('dashboard_stats');
+});
+
+// Invalida el caché al crear/eliminar un tour
+Events::on('tourChanged', function () {
+    cache()->delete('dashboard_stats');
+});
