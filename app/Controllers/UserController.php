@@ -135,22 +135,48 @@ class UserController extends ResourceBaseController
             return $this->failNotFound('Usuario no encontrado');
         }
 
-        // 2) build obj to validating
-        $updateData = [];
-        if (isset($data['username']) && $data['username'] !== $userToUpdate['username']) {
-            $updateData['username'] = $data['username'];
-        }
-
-        if (isset($data['password']) && !empty($data['password'])) {
-            $updateData['password'] = $data['password'];
-        }
-
         if (!$this->model->validateData($data + ['id' => $authUser['id']], 'updateSelf')) {
             return $this->failValidationErrors($this->model->getErrors());
         }
 
-        if (isset($updateData['password'])) {
-            $updateData['password'] = password_hash($updateData['password'], PASSWORD_DEFAULT);
+        // validating password if is same into userToUpdate
+        if (isset($data['password']) && !password_verify($data['password'], $userToUpdate['password'])) {
+            return $this->failValidationErrors(['password' => 'Password incorrecto']);
+        }
+
+        // 2) build obj to validating
+        $updateData = [
+            'name' => isset($data['name']) ? $data['name'] : $userToUpdate['name']
+        ];
+
+        // if (isset($data['name']) && $data['name'] !== $userToUpdate['name']) {
+        //     $updateData['name'] = $data['name'];
+        // }
+
+        if (isset($data['email']) && $data['email'] !== $userToUpdate['email']) {
+            $updateData['email'] = $data['email'];
+        }
+
+        if (isset($data['username']) && $data['username'] !== $userToUpdate['username']) {
+            $updateData['username'] = $data['username'];
+        }
+
+        if (isset($data['newPassword']) && !empty($data['newPassword'])) {
+            // validate newPassword with this rule password
+            $validation = \Config\Services::validation();
+            $rules = [
+                'newPassword' => 'required|min_length[8]|max_length[255]',
+            ];
+            $validation->setRules($rules);
+            if (!$validation->run($data)) {
+                return $this->failValidationErrors($validation->getErrors());
+            }
+
+            // verify that new password is not same current password
+            if (password_verify($data['newPassword'], $userToUpdate['password'])) {
+                return $this->failValidationErrors(['newPassword' => 'La nueva password no puede ser la misma que la actual']);
+            }
+            $updateData['password'] = password_hash($data['newPassword'], PASSWORD_DEFAULT);
         }
 
         try {

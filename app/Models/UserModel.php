@@ -9,7 +9,7 @@ class UserModel extends Model
     protected $table = 'users';
     protected $primaryKey = 'id';
 
-    protected $allowedFields = ['username', 'password', 'role', 'email', 'created_at', 'updated_at'];
+    protected $allowedFields = ['name', 'username', 'password', 'role', 'email', 'created_at', 'updated_at'];
 
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
@@ -20,7 +20,8 @@ class UserModel extends Model
 
 
     protected $validationRules = [
-        'username' => 'required|min_length[3]|max_length[50]|alpha_numeric|is_unique[users.username]',
+        'name'     => 'permit_empty|max_length[100]|alpha_numeric_space',
+        'username' => 'required|min_length[4]|max_length[50]|alpha_numeric|is_unique[users.username]',
         'password' => 'required|min_length[8]|max_length[255]',
         'email'    => 'required|valid_email|max_length[150]|is_unique[users.email]',
         'role'     => 'permit_empty|in_list[admin,superadmin,user]',
@@ -60,7 +61,8 @@ class UserModel extends Model
         if ($context === 'update') {
             $rules = [
                 'id'    => 'max_length[19]|is_natural_no_zero',
-                'username' => 'permit_empty|min_length[3]|max_length[50]|alpha_numeric|is_unique[users.username,id,{id}]',
+                'name'  => 'permit_empty|max_length[100]|alpha_numeric_space',
+                'username' => 'permit_empty|min_length[4]|max_length[50]|alpha_numeric|is_unique[users.username,id,{id}]',
                 'password' => 'permit_empty|min_length[8]|max_length[255]',
                 'email'    => 'permit_empty|valid_email|max_length[150]|is_unique[users.email,id,{id}]',
                 'role'     => 'permit_empty|in_list[admin,superadmin,user]',
@@ -68,8 +70,9 @@ class UserModel extends Model
         } elseif ($context === 'updateSelf') {
             $rules = [
                 'id'    => 'max_length[19]|is_natural_no_zero',
-                'username' => 'permit_empty|min_length[3]|max_length[50]|alpha_numeric|is_unique[users.username,id,{id}]',
-                'password' => 'permit_empty|min_length[8]|max_length[255]',
+                'name'  => 'permit_empty|max_length[100]|alpha_numeric_space',
+                'username' => 'permit_empty|min_length[4]|max_length[50]|alpha_numeric|is_unique[users.username,id,{id}]',
+                'password' => 'required|min_length[8]|max_length[255]',
             ];
         } else {
             $rules = $this->validationRules;
@@ -84,7 +87,6 @@ class UserModel extends Model
 
         return true;
     }
-
 
     public function validateLogin(array $data): bool
     {
