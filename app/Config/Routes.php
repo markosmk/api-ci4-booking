@@ -9,8 +9,6 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers', 'filter' => 'cors'],
 
 
     $routes->options('(:any)', static function () {
-        // Implement processing for normal non-preflight OPTIONS requests,
-        // if necessary.
         $response = response();
         $response->setStatusCode(204);
         $response->setHeader('Allow:', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
@@ -45,18 +43,22 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers', 'filter' => 'cors'],
     $routes->delete('reservation-types/(:num)', 'ReservationTypeController::delete/$1', ['filter' => 'auth']);
 
     // $routes->resource('tours');
-
     $routes->get('tours', 'TourController::index');
     $routes->get('tours/(:num)', 'TourController::show/$1');
     $routes->post('tours', 'TourController::create');
+    $routes->put('tours/(:num)', 'TourController::update/$1');
+
     // Para crear horarios y reservar, puedes usar rutas adicionales o incluirlas en el recurso
     $routes->post('schedules/(:segment)', 'ScheduleController::createSchedule/$1');
     $routes->get('schedules/(:segment)', 'ScheduleController::getSchedulesByMonth/$1');
     $routes->get('schedules/(:segment)/month/(:num)/year/(:num)', 'ScheduleController::getSchedulesByMonth/$1/$2/$3');
     $routes->get('schedules/(:segment)/date/(:any)', 'ScheduleController::getSchedulesByDate/$1/$2');
+    // $routes->get('schedules/(:segment)/(:num)', 'ScheduleController::showByTourId/$1/$2');
 
     $routes->get('bookings', 'BookingController::index');
+    $routes->get('bookings/(:num)', 'BookingController::show/$1');
     $routes->post('bookings', 'BookingController::bookTour');
+    $routes->put('bookings/(:num)/status', 'BookingController::updateBookingStatus/$1');
 
 
     $routes->get('customers', 'CustomerController::index');
@@ -66,5 +68,9 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers', 'filter' => 'cors'],
     $routes->get('dashboard/stats', 'AnalyticsController::index');
     $routes->get('dashboard/recent-bookings', 'AnalyticsController::recentsBookings');
     $routes->get('dashboard/clear-cache', 'AnalyticsController::clearCache');
+
+    // settings
+    $routes->get('settings', 'SettingsController::index', ['filter' => 'auth']);
+    $routes->put('settings/(:num)', 'SettingsController::update/$1', ['filter' => 'auth']);
 
 });
