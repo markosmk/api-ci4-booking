@@ -81,11 +81,14 @@ class BookingModel extends Model
         $builder = $db->table($this->table);
 
         $builder->select('
-            bookings.*,
-            customers.name as customer_name, customers.email as customer_email, customers.phone as customer_phone
+            bookings.id, bookings.quantity, bookings.status, bookings.totalPrice, bookings.created_at,
+            customers.name as customer_name, customers.email as customer_email, customers.phone as customer_phone,
+            JSON_EXTRACT(bookings.tourData, "$.name") as tour_name,
+            JSON_EXTRACT(bookings.tourData, "$.price") as tour_price
         ');
 
         $builder->join('customers', 'customers.id = bookings.customerId');
+        $builder->orderBy('bookings.created_at', 'desc');
         // $builder->join('tours', 'tours.id = bookings.tourId');
         // $builder->join('schedules', 'schedules.id = bookings.scheduleId');
 
@@ -96,7 +99,6 @@ class BookingModel extends Model
         $query = $builder->get();
         return $query->getResultArray();
     }
-
 
     public function countAllBookingsWithDetails()
     {
@@ -111,28 +113,73 @@ class BookingModel extends Model
         return $builder->countAllResults();
     }
 
-    private function transformData($bookings)
+    public function getBookingById(int $id)
     {
-        $formated = array_map(function ($booking) {
-            return [
-                'id' => $booking['id'],
-                'customer' => [
-                    'name' => $booking['customer_name'],
-                    'email' => $booking['customer_email'],
-                    'phone' => $booking['customer_phone'],
-                ],
-                'tour' => [
-                    'name' => $booking['tour_name'],
-                    'description' => $booking['tour_description'],
-                ],
-                'schedule' => [
-                    'date' => $booking['schedule_date'],
-                    'startTime' => $booking['schedule_start_time'],
-                    'endTime' => $booking['schedule_end_time'],
-                ],
-            ];
-        }, $bookings);
+        $db = \Config\Database::connect();
+        $builder = $db->table($this->table);
 
+        $builder->select('
+            bookings.*,
+            tours.name as tour_name, tours.description as tour_description, tours.price as tour_price, tours.content as tour_content, tours.capacity as tour_capacity, tours.updated_at as tour_updated_at,
+            schedules.date as schedule_date, schedules.startTime as schedule_start_time, schedules.endTime as schedule_end_time,
+            customers.name as customer_name, customers.email as customer_email, customers.phone as customer_phone
+        ');
+        // JSON_EXTRACT(bookings.tourData, "$.name") as tourData_name,
+        // JSON_EXTRACT(bookings.tourData, "$.price") as tourData_price,
+        // JSON_EXTRACT(bookings.tourData, "$.duration") as tourData_duration,
+        // JSON_EXTRACT(bookings.tourData, "$.content") as tourData_content
+        $builder->join('customers', 'customers.id = bookings.customerId');
+        $builder->join('tours', 'tours.id = bookings.tourId');
+        $builder->join('schedules', 'schedules.id = bookings.scheduleId');
+        $builder->where('bookings.id', $id);
+
+        $query = $builder->get();
+        return $this->transformData($query->getResultArray(), true);
+    }
+
+    private function transformData($bookings, $isOne = false)
+    {
+        if ($bookings == null) {
+            $formated = [];
+        } else {
+            $formated = array_map(function ($booking) {
+                return [
+                    'id' => $booking['id'],
+                    'tourId' => $booking['tourId'],
+                    'scheduleId' => $booking['scheduleId'],
+                    'customerId' => $booking['customerId'],
+                    'status' => $booking['status'],
+                    'quantity' => $booking['quantity'],
+                    'totalPrice' => $booking['totalPrice'],
+                    // take real price from tourData
+                    'tourData' => $booking['tourData'] ? json_decode($booking['tourData']) : null,
+                    'customer' => [
+                        'name' => $booking['customer_name'],
+                        'email' => $booking['customer_email'],
+                        'phone' => $booking['customer_phone'],
+                    ],
+                    'tour' => [
+                        'name' => $booking['tour_name'],
+                        'description' => $booking['tour_description'],
+                        // this data may be compared with tourData
+                        'content' => $booking['tour_content'],
+                        'capacity' => $booking['tour_capacity'],
+                        'price' => $booking['tour_price'],
+                        'updatedAt' => $booking['tour_updated_at'],
+                    ],
+                    'schedule' => [
+                        'date' => $booking['schedule_date'],
+                        'startTime' => $booking['schedule_start_time'],
+                        'endTime' => $booking['schedule_end_time'],
+                    ],
+                    'createdAt' => $booking['created_at'],
+                ];
+            }, $bookings);
+        }
+
+        if ($isOne) {
+            return isset($formated[0]) ? $formated[0] : null;
+        }
         return $formated;
     }
 }
