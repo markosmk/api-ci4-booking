@@ -23,6 +23,7 @@ class SettingsController extends ResourceBaseController
 
     public function update($id = null)
     {
+        sleep(1);
         $data = $this->request->getJSON(true);
 
         if (!$id && $id != 1) {

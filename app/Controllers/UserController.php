@@ -127,6 +127,7 @@ class UserController extends ResourceBaseController
     /** this method must be used for updating the current user */
     public function updateSelf()
     {
+        sleep(1);
         $authUser = $this->request->user;
         $data = $this->request->getJSON(true);
 
@@ -141,7 +142,7 @@ class UserController extends ResourceBaseController
 
         // validating password if is same into userToUpdate
         if (isset($data['password']) && !password_verify($data['password'], $userToUpdate['password'])) {
-            return $this->failValidationErrors(['password' => 'Password incorrecto']);
+            return $this->failValidationErrors(['password' => 'La contraseña es incorrecta']);
         }
 
         // 2) build obj to validating
@@ -174,7 +175,7 @@ class UserController extends ResourceBaseController
 
             // verify that new password is not same current password
             if (password_verify($data['newPassword'], $userToUpdate['password'])) {
-                return $this->failValidationErrors(['newPassword' => 'La nueva password no puede ser la misma que la actual']);
+                return $this->failValidationErrors(['newPassword' => 'La nueva contraseña no puede ser la misma que la actual.']);
             }
             $updateData['password'] = password_hash($data['newPassword'], PASSWORD_DEFAULT);
         }
@@ -197,7 +198,7 @@ class UserController extends ResourceBaseController
 
         } catch (\Exception $e) {
             log_message('error', $e->getMessage());
-            return $this->respondWithServerError('No se pudo actualizar tu informacion');
+            return $this->respondWithServerError('No se pudo actualizar tu informacion, intenta mas tarde o contacta a un administrador.');
         }
 
     }
