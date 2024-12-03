@@ -20,35 +20,108 @@ class AnalyticsController extends ResourceBaseController
 
         $db = \Config\Database::connect();
 
-        $totalIncome = $db->table('bookings')
-            ->selectSum('totalPrice', 'total_income')
+        $currentMonth = date('Y-m');
+        $currentDate = date('Y-m-d');
+        $currentMonthStart = date('Y-m-01');
+        // Inicio del mes anterior
+        $previousMonthStart = date('Y-m-01', strtotime('first day of last month'));
+
+        // Calcular el mismo día del mes anterior
+        $currentDay = (int)date('d'); // Día actual
+        $daysInPreviousMonth = (int)date('t', strtotime($previousMonthStart)); // Días del mes anterior
+        $adjustedDay = min($currentDay, $daysInPreviousMonth); // Ajustar al último día del mes anterior si necesario
+        $previousMonthEnd = date('Y-m-', strtotime($previousMonthStart)) . str_pad($adjustedDay, 2, '0', STR_PAD_LEFT);
+
+        // Total ingresos actuales (mes en curso)
+        $currentIncome = $db->table('bookings')
+            ->selectSum('totalPrice', 'total')
             ->where('status', 'CONFIRMED')
+            ->where('created_at >=', $currentMonthStart)
+            ->where('created_at <=', $currentDate)
             ->get()
             ->getRow()
-            ->total_income;
+            ->total ?? 0;
 
-        $totalVisitors = $db->table('bookings')
-            ->selectSum('quantity', 'total_visitors')
+        // Total ingresos del mes anterior (hasta el mismo día ajustado)
+        $lastIncome = $db->table('bookings')
+            ->selectSum('totalPrice', 'total')
             ->where('status', 'CONFIRMED')
+            ->where('created_at >=', $previousMonthStart)
+            ->where('created_at <=', $previousMonthEnd)
             ->get()
             ->getRow()
-            ->total_visitors;
+            ->total ?? 0;
 
+        $incomeChange = $lastIncome > 0
+        ? (($currentIncome - $lastIncome) / $lastIncome) * 100
+        : null;
+
+
+        // ********* quantity of visitors ********* //
+        $currentVisitors = $db->table('bookings')
+        ->selectSum('quantity', 'total')
+        ->where('status', 'CONFIRMED')
+        ->where('created_at >=', $currentMonthStart)
+        ->where('created_at <=', $currentDate)
+        ->get()
+        ->getRow()
+        ->total ?? 0;
+
+        $lastVisitors = $db->table('bookings')
+            ->selectSum('quantity', 'total')
+            ->where('status', 'CONFIRMED')
+            ->where('created_at >=', $previousMonthStart)
+            ->where('created_at <=', $previousMonthEnd)
+            ->get()
+            ->getRow()
+            ->total ?? 0;
+
+        $visitorsChange = $lastVisitors > 0
+        ? (($currentVisitors - $lastVisitors) / $lastVisitors) * 100
+        : null;
+
+        // ********* quantity of bookings ********* //
+        $currentBookings = $db->table('bookings')
+        ->where('status', 'CONFIRMED')
+        ->where('created_at >=', $currentMonthStart)
+        ->where('created_at <=', $currentDate)
+        ->countAllResults() ?? 0;
+
+        $lastBookings = $db->table('bookings')
+            ->where('status', 'CONFIRMED')
+            ->where('created_at >=', $previousMonthStart)
+            ->where('created_at <=', $previousMonthEnd)
+            ->countAllResults() ?? 0;
+
+        $bookingsChange = $lastBookings > 0
+        ? (($currentBookings - $lastBookings) / $lastBookings) * 100
+        : null;
+
+        // ********* total Bookings PENDING and CONFIRMED ********* //
         $totalBookingsConfirmed = $db->table('bookings')
             ->where('status', 'CONFIRMED')
             ->countAllResults();
 
-        $totalBookingsNotPending = $db->table('bookings')
-            ->where('status !=', 'PENDING')
+        $totalBookingsPending = $db->table('bookings')
+            ->where('status', 'PENDING')
             ->countAllResults();
 
-        $totalActiveTours = $db->table('tours')
-            ->where('active', '1')
-            ->countAllResults();
+        // ********* popular tour ********* //
+        $popularTour = $db->table('bookings')
+        ->select('tourId, COUNT(*) as bookings_count, tours.name as tour_name')
+        ->join('tours', 'tours.id = bookings.tourId')
+        ->where('status', 'CONFIRMED')
+        ->where("DATE_FORMAT(tours.created_at, '%Y-%m')", $currentMonth)
+        ->groupBy('tourId')
+        ->orderBy('bookings_count', 'DESC')
+        ->limit(1)
+        ->get()
+        ->getRowArray();
+
+
 
         // monthly income by months
         $monthlyIncome = $db->table('bookings')
-
             ->select("MONTH(created_at) as month, SUM(totalPrice) as income")
             ->where('status', 'CONFIRMED')
             ->groupBy('month')
@@ -57,11 +130,21 @@ class AnalyticsController extends ResourceBaseController
             ->getResultArray();
 
         $data = [
-            'total_income' => $totalIncome ?? 0,
-            'total_visitors' => $totalVisitors ?? 0,
+            'income' => [
+                'total' => $currentIncome,
+                'change' => $incomeChange !== null ? number_format($incomeChange, 1) . '%' : 'N/A',
+            ],
+            'visitors' => [
+                'total' => $currentVisitors,
+                'change' => $visitorsChange !== null ? number_format($visitorsChange, 1) . '%' : 'N/A',
+            ],
+            'bookings' => [
+                'total' => $currentBookings,
+                'change' => $bookingsChange !== null ? number_format($bookingsChange, 1) . '%' : 'N/A',
+            ],
             'total_bookings_confirmed' => $totalBookingsConfirmed ?? 0,
-            'total_bookings_not_pending' => $totalBookingsNotPending ?? 0,
-            'total_active_tours' => $totalActiveTours ?? 0,
+            'total_bookings_pending' => $totalBookingsPending ?? 0,
+            'popularTour' => $popularTour,
             'monthly_income' => $this->formatMonthlyIncome($monthlyIncome),
         ];
 
@@ -87,7 +170,7 @@ class AnalyticsController extends ResourceBaseController
             ->join('tours', 'tours.id = bookings.tourId')
             // ->where('bookings.status', 'PENDING')
             ->orderBy('bookings.created_at', 'DESC')
-            ->limit(10)
+            ->limit(5)
             ->get()
             ->getResultArray();
 
