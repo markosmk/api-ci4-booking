@@ -10,26 +10,32 @@ class CreateSchedulesTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'        => [
-                'type'           => 'VARCHAR',
-                'constraint'     => 36,
-                'primary_key'    => true,
-                'default'        => 'UUID()',
+            'id'       => [
+                'type'           => 'INT',
+                'constraint'     => 11,
+                'unsigned'       => true,
+                'auto_increment' => true,
             ],
+            // 'id'        => [
+            //     'type'           => 'VARCHAR',
+            //     'constraint'     => 36,
+            //     'primary_key'    => true,
+            //     'default'        => 'UUID()',
+            // ],
             'tourId'    => [
-                'type'           => 'VARCHAR',
-                'constraint'     => 36,
+                'type'           => 'INT',
+                'unsigned'       => true,
             ],
             'date'      => [
-                'type'       => 'DATETIME',
+                'type'       => 'DATE',
             ],
             'startTime' => [
-                'type'       => 'DATETIME',
+                'type'       => 'TIME',
             ],
             'endTime'   => [
-                'type'       => 'DATETIME',
+                'type'       => 'TIME',
             ],
-            'available' => [
+            'active' => [
                 'type'       => 'BOOLEAN',
                 'default'    => true,
             ],
@@ -47,8 +53,9 @@ class CreateSchedulesTable extends Migration
             ],
         ]);
 
+        $this->forge->addPrimaryKey('id');
+        $this->forge->addForeignKey('tourId', 'tours', 'id', 'CASCADE', 'CASCADE', 'schedules_tourId_foreign');
         $this->forge->createTable('schedules');
-        $this->forge->addForeignKey('tourId', 'tours', 'id', 'CASCADE', 'CASCADE');
 
         $this->db->query("ALTER TABLE schedules MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
     }

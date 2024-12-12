@@ -22,10 +22,16 @@ class CreateUsersTable extends Migration
         $this->forge->addField(
             [
                 'id'       => [
-                    'type'           => 'VARCHAR',
-                    'constraint'     => 36,
-                    'primary_key'    => true,
-                    'default'        => 'UUID()',
+                    'type'           => 'INT',
+                    'constraint'     => 11,
+                    'unsigned'       => true,
+                    'auto_increment' => true,
+                ],
+                'username'    => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 255,
+                    'null'       => true,
+                    // 'unique'     => true,
                 ],
                 'email'    => [
                     'type'       => 'VARCHAR',
@@ -58,10 +64,14 @@ class CreateUsersTable extends Migration
                 ],
             ]
         );
+
+        // $this->forge->addKey('id', true);
+        $this->forge->addPrimaryKey('id');
         $this->forge->createTable('users');
 
         $this->db->query("ALTER TABLE users MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
 
+        // execute php spark migrate
     }
 
     /**

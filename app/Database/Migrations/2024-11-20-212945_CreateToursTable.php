@@ -10,18 +10,28 @@ class CreateToursTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'          => [
-                'type'           => 'VARCHAR',
-                'constraint'     => 36,
-                'primary_key'    => true,
-                'default'        => 'UUID()',
+            'id'       => [
+                'type'           => 'INT',
+                'constraint'     => 11,
+                'unsigned'       => true,
+                'auto_increment' => true,
             ],
             'name'        => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
             'description' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'content' => [
                 'type'       => 'TEXT',
+                'null'       => true,
+            ],
+            'media' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
                 'null'       => true,
             ],
             'duration'    => [
@@ -31,6 +41,15 @@ class CreateToursTable extends Migration
             'capacity'    => [
                 'type'       => 'INT',
                 'null'       => true,
+            ],
+            'price'    => [
+                'type' => 'DECIMAL',
+                'constraint' => '10,2',
+                'default' => 0.00,
+            ],
+            'active'    => [
+                'type'       => 'BOOLEAN',
+                'default'    => true,
             ],
             'created_at'  => [
                 'type' => 'TIMESTAMP',
@@ -45,7 +64,9 @@ class CreateToursTable extends Migration
             ],
         ]);
 
+        $this->forge->addPrimaryKey('id');
         $this->forge->createTable('tours');
+
         $this->db->query("ALTER TABLE tours MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
     }
 
