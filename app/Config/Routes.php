@@ -57,7 +57,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers', 'filter' => 'cors'],
 
     $routes->get('bookings', 'BookingController::index');
     $routes->get('bookings/(:num)', 'BookingController::show/$1');
-    $routes->post('bookings', 'BookingController::bookTour');
+    $routes->post('bookings', 'BookingController::createBookingTour');
     $routes->put('bookings/(:num)/status', 'BookingController::updateBookingStatus/$1');
 
 

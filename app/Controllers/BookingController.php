@@ -55,7 +55,7 @@ class BookingController extends ResourceBaseController
         return $this->respond($booking);
     }
 
-    public function bookTour()
+    public function createBookingTour()
     {
         $data = $this->request->getJSON(true);
 
